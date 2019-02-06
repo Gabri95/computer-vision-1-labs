@@ -1,0 +1,3 @@
+CNN: fine_tuned_accuracy: 99.000
+SVM: pre_trained_accuracy: 70.000
+SVM: fine_tuned_accuracy: 98.500
