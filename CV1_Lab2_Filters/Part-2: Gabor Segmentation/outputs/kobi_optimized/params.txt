@@ -1,0 +1,8 @@
+sigmaSmoothing = 4;
+
+lambdas = 2.^(0:(n-5)) * lambdaMin;   % (2.8284    5.6569   11.3137)
+
+dTheta      = 2*pi/8;                  % \\ the step size
+orientations = 0:dTheta:(pi/2); 
+
+sigmas = [2 5 8 ]; 
