@@ -1,0 +1,73 @@
+close all
+clear all
+clc
+ 
+
+disp('Part 1: Photometric Stereo')
+
+% obtain many images in a fixed view under different illumination
+disp('Loading images...')
+image_dir = './MonkeyGray';
+%image_ext = '*.png';
+
+% [image_stack, scriptV] = load_syn_images(image_dir);
+[image_stack, scriptV] = load_face_images('./yaleB02_smaller/');
+[h, w, n] = size(image_stack);
+image_stack = reshape(image_stack, h, w, 1, n);
+
+fprintf('Finish loading %d images.\n\n', n);
+
+% compute the surface gradient from the stack of imgs and light source mat
+disp('Computing surface albedo and normal map...')
+[albedo, normals] = estimate_alb_nrm(image_stack, scriptV, false);
+
+
+%% integrability check: is (dp / dy  -  dq / dx) ^ 2 small everywhere?
+disp('Integrability checking')
+[p, q, SE] = check_integrability(normals);
+
+threshold = 0.005;
+SE(SE <= threshold) = NaN; % for good visualization
+fprintf('Number of outliers: %d\n\n', sum(sum(SE > threshold)));
+
+%% compute the surface height
+height_map_r = construct_surface( p, q, 'row');
+height_map_c = construct_surface( p, q, 'column');
+height_map = construct_surface( p, q, 'average');
+
+%% Display
+show_results(albedo, normals, SE);
+show_model(albedo, height_map_c);
+show_model(albedo, height_map_r);
+show_model(albedo, height_map);
+
+show_vector_field(height_map, normals, albedo)
+%  show_vector_field(height_map_c, normals, albedo)
+% show_vector_field(height_map_r, normals, albedo)
+
+M = max(max(height_map_c(:)), max(height_map_r(:)));
+m = min(min(height_map_c(:)), min(height_map_r(:)));
+
+if M == m
+    m = 0.0;
+end
+
+n = M - m;
+
+if n == 0
+    n = 1;
+end
+
+figure;
+subplot(1, 3, 1);
+imshow((height_map - m )/ n);
+title('average');
+
+% figure;
+subplot(1, 3, 2);
+imshow((height_map_r -m)/ n);
+title('row');
+% figure;
+subplot(1, 3, 3);
+imshow((height_map_c - m)/ n);
+title('column');
